@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "robot_rust"
+name = "rusty_robot"
 version = "0.1.0"
 dependencies = [
  "strum",
