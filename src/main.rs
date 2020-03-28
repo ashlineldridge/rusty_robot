@@ -1,6 +1,8 @@
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use Direction::*;
+use std::io;
+use std::io::{BufRead, Error};
 
 #[derive(Copy, Clone)]
 struct Table {
@@ -138,5 +140,25 @@ impl Game {
 }
 
 fn main() {
-    println!("{}", 3);
+    let mut game = Game{ robot: None, table: Table { width: 5, height: 5 } };
+    let stdin = io::stdin();
+    for line in stdin.lock().lines() {
+        match line {
+            Ok(line) => {
+                let res = match line.as_str() {
+                    "MOVE" => game.r#move(),
+                    "LEFT" => game.rotate_left(),
+                    "RIGHT" => game.rotate_right(),
+                    "REPORT" => game.report().map(|v| println!("{}", v)),
+                    _ => Err(format!("Unrecognised command '{}'", line))
+                };
+
+                match res {
+                    Err(e) => println!("{}", e),
+                    _ => ()
+                }
+            },
+            Err(e) => panic!("Error reading input: {}", e),
+        }
+    }
 }
