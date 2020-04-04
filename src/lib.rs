@@ -1,8 +1,7 @@
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+
 use Direction::*;
-use std::io;
-use std::io::{BufRead, Error};
 
 #[derive(Copy, Clone)]
 struct Table {
@@ -40,6 +39,10 @@ struct Robot {
 }
 
 impl Robot {
+    fn new(x: usize, y: usize, d: Direction) -> Robot {
+        Robot { x, y, d }
+    }
+
     fn rotate(&mut self, delta: i32) {
         self.d = self.d.rotate(delta)
     }
@@ -55,7 +58,7 @@ impl Robot {
 }
 
 #[derive(Debug, EnumIter, PartialEq, Copy, Clone)]
-enum Direction {
+pub enum Direction {
     North,
     East,
     South,
@@ -92,16 +95,23 @@ mod test_direction {
     }
 }
 
-struct Game {
+pub struct Game {
     robot: Option<Robot>,
     table: Table,
 }
 
+pub fn new(width: usize, height: usize) -> Game {
+    Game {
+        robot: None,
+        table: Table { width, height },
+    }
+}
+
 impl Game {
-    fn place(&mut self, x: usize, y: usize, d: Direction) -> Result<(), String> {
+    pub fn place(&mut self, x: usize, y: usize, d: Direction) -> Result<(), String> {
         match self.table.is_valid(x, y) {
             true => {
-                self.robot = Some(Robot { x, y, d });
+                self.robot = Some(Robot::new(x, y, d));
                 Ok(())
             }
             false => Err(format!(
@@ -118,15 +128,15 @@ impl Game {
             .ok_or("Robot has not been placed on table".to_string())
     }
 
-    fn r#move(&mut self) -> Result<(), String> {
+    pub fn r#move(&mut self) -> Result<(), String> {
         self.map_robot(|r| r.r#move())
     }
 
-    fn rotate_right(&mut self) -> Result<(), String> {
+    pub fn rotate_right(&mut self) -> Result<(), String> {
         self.rotate(1)
     }
 
-    fn rotate_left(&mut self) -> Result<(), String> {
+    pub fn rotate_left(&mut self) -> Result<(), String> {
         self.rotate(-1)
     }
 
@@ -134,31 +144,7 @@ impl Game {
         self.map_robot(|r| r.rotate(delta))
     }
 
-    fn report(&mut self) -> Result<String, String> {
+    pub fn report(&mut self) -> Result<String, String> {
         self.map_robot(|r| format!("{}, {}, {:?}", r.x, r.y, r.d))
-    }
-}
-
-fn main() {
-    let mut game = Game{ robot: None, table: Table { width: 5, height: 5 } };
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-        match line {
-            Ok(line) => {
-                let res = match line.as_str() {
-                    "MOVE" => game.r#move(),
-                    "LEFT" => game.rotate_left(),
-                    "RIGHT" => game.rotate_right(),
-                    "REPORT" => game.report().map(|v| println!("{}", v)),
-                    _ => Err(format!("Unrecognised command '{}'", line))
-                };
-
-                match res {
-                    Err(e) => println!("{}", e),
-                    _ => ()
-                }
-            },
-            Err(e) => panic!("Error reading input: {}", e),
-        }
     }
 }
